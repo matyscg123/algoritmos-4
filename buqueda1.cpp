@@ -61,7 +61,7 @@ if(x==1){
 
 void insertar(Nodo *&lista,int numero){
 	Nodo *nuevo=new Nodo ();
-	
+	int f=0;
 	nuevo->numeros=numero;
 	Nodo *aux=lista;
 	Nodo *aux2;
