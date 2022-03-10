@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
+#include<regex>
 #include <time.h>
 #include <ctime>
 #include <fstream>
@@ -17,11 +18,14 @@ struct Nodo{
 void menuP(Nodo *&);
 void ingreso(Nodo *&);
 void salida(Nodo *&);
-void imprimir(Nodo *);
 void generarArchivo(Nodo *);
 void validarArchivo(Nodo *&);
 void vaciarlista (Nodo *&);
-//void imprimir(Nodo *);
+void salir();
+bool validarplacaM(string);
+bool validarplacaC(string);
+int validarP(Nodo *,string);
+
 int main(){
 	struct Nodo *lista;
 	lista = NULL;
@@ -38,7 +42,7 @@ void menuP(Nodo *&lista){
     {
     cout << "\n\t MENU DE OPCIONES\n\n";
     cout << " 1. Ingresar " << endl;
-    cout << " 2. salida vehiculo" << endl;
+    cout << " 2. Salida vehiculo" << endl;
     cout << " 3. Salir  " << endl;
     cout << "\n INGRESE OPCION: ";
     cin >> op;
@@ -47,7 +51,6 @@ void menuP(Nodo *&lista){
 		{
 			case 1:
 	  		ingreso(lista);
-	  		imprimir(lista);
 	  			break;
 
 			case 2:
@@ -55,7 +58,7 @@ void menuP(Nodo *&lista){
 	  			break;
 	  
 			case 3:
-				
+				salir();
 				break;		
 		}
 
@@ -71,14 +74,56 @@ void ingreso(Nodo *&lista){
 	Nodo *nuevo=new Nodo ();
 	string placa;
 	string tipo;
-	string fecha;
-	cout<<"Ingrese la placa :\n";
-	cin>>placa;	
-	cout<<"\n Ingrese el tipo \n";
+ 	string fecha;
+	
+	int op=0;	
+	while(op==0){
+	op=1;
+	//elegir el tipo de vehiculo a ingresar
+	cout<<"\n Ingrese el tipo de vehiculo\n";
 	cout<<" (1)moto\n (2)automovil\n (3)camioneta\n (4)camion :\n";
-	cin>>tipo;	
-	time_t t;
-	cout<<"ingrese la fecha :\n";cin>>fecha;
+	cin>>tipo;
+	if(tipo!="1" && tipo!="2" && tipo!="3" && tipo!="4"){
+		op=0;
+	}	
+	}	
+	
+	//ingresar y validar la placa
+	int u=0;
+	if(tipo=="1"){
+		while(u==0){
+			cout<<"Ingrese la placa :\n";
+			cin>>placa;
+			if(validarplacaM(placa) && validarP(lista,placa)==1){
+				cout<<"placa valido"<<endl;
+			u=1;	
+			}
+			else{
+				cout<<"placa Inavalido"<<endl;
+			u=0;	
+			}
+		}
+	}	else{
+		while(u==0){
+			cout<<"Ingrese la placa :\n";
+			cin>>placa;
+			if(validarplacaC(placa) && validarP(lista,placa)==1){
+				cout<<"placa valido"<<endl;
+			u=1;	
+			}
+			else{
+				cout<<"placa Inavalido"<<endl;
+			u=0;	
+			}
+		}
+	}
+	//ingresar la hora actual desde el odenador 
+		time_t tiempo = time(0);
+        struct tm *tlocal = localtime(&tiempo);
+        char output[128];
+        strftime(output,128,"%d/%m/%y-%H:%M:%S",tlocal);
+        printf("%s\n",output);
+	fecha=output;
 	nuevo->placa=placa;
 	nuevo->tipoV=tipo;
 	nuevo->fecha=fecha;
@@ -99,6 +144,32 @@ void ingreso(Nodo *&lista){
 	cout<<"\ninsertado en la lista corectamente\n";
 }
 
+bool validarplacaM(string ced){ 
+	const regex exp("\\D{3}\\d{2}\\D{1}");
+	return regex_match(ced,exp);
+}
+bool validarplacaC(string ced){ 
+	const regex exp("\\D{3}\\d{3}");
+	return regex_match(ced,exp);
+}
+int validarP(Nodo *lista,string placa){
+	Nodo *p = new Nodo();
+	p=lista;
+	int op=1;
+	while(p!=NULL){
+	if(placa==p->placa){
+	op=0;
+	}		
+	p=p->siguiente;	
+	}
+	if(op==0){
+		return op;
+	}else{
+		
+		return op;
+	}
+	
+}
 void salida(Nodo *&lista){
 	string co,tipo;
 	int moto=0,automovil=0,camioneta=0,camion=0,horas=0;
@@ -116,7 +187,6 @@ void salida(Nodo *&lista){
 		while(p!=NULL){
 			if(co==p->placa){
 				tipo=p->tipoV;
-				cout<<tipo<<"tipo aqui";
 			}
 			p=p->siguiente;
 		}
@@ -169,13 +239,29 @@ void salida(Nodo *&lista){
 			aux2->siguiente = aux1->siguiente;
 			delete aux1;	
 		}
-		
-		
 	}
-	
-		
 		cout<<"\nEl total a pagar es de  "<<total;
+		ifstream file1;
+		int valor=0;
+		file1.open("total.txt", ios::in);	
+		if (!file1.fail())
+		{
+		file1>>valor;
+		file1.close();
+		}
+		ofstream file;
+		file.open("total.txt", ios::out);
+  		if(!file.fail()){
+			valor=valor+total;
+			file<<valor;
+			file.close();
+		}else{
+			cout<<"Error al crear el archivo";
+			exit(1);
+		}
+		
 }
+
 void generarArchivo(Nodo *lista)
 {	
 	ofstream file;
@@ -234,31 +320,29 @@ void validarArchivo (Nodo *&lista)
 	{
 		cout<<"No se cargo la informacion\n";
 	}
-}
-void imprimir(Nodo *lista){
-	Nodo *aux = new Nodo();
-	aux=lista;
-	while(aux->siguiente!=NULL){
-	cout<<"\n"<<aux->placa;
-	if(aux->tipoV=="1"){
-	cout<<"\nmoto";	
-	}
-	if(aux->tipoV=="2"){
-	cout<<"\nautomovil";	
-	}
-	if(aux->tipoV=="3"){
-	cout<<"\nCamioneta";	
-	}
-	if(aux->tipoV=="4"){
-	cout<<"\nCamion";	
-	}
-	cout<<"\n"<<aux->fecha;
-		aux=aux->siguiente;
-	}
-	
-	
-}
-
+}		
+ void salir(){
+ 	
+ 		ifstream file1;
+		int valor=0;
+		file1.open("total.txt", ios::in);	
+		if (!file1.fail())
+		{
+		file1>>valor;
+		cout<<"El total que debe haber en caja es de : "<<valor;
+		file1.close();
+		}
+		ofstream file;
+		file.open("total.txt", ios::out);
+  		if(!file.fail()){
+  			valor=0;
+			file<<valor;
+			file.close();
+		}else{
+			cout<<"Error al crear el archivo";
+			exit(1);
+		}
+ }
 void vaciarlista (Nodo *&lista)
 {
 	Nodo *aux1 = lista;
